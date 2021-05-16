@@ -3,70 +3,81 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define N_OXIGENIO 5
-#define n_HIDROGENIO 10
+#define N_OXYGEN 10
+#define N_HYDROGEN 20
 
-int oxigenio = 0;
-int hidrogenio = 0;
+int oxygen = 0;
+int hydrogen = 0;
 
-sem_t sem_hidro;
-sem_t sem_oxi;
+sem_t sem_hydro;
+sem_t sem_oxy;
+pthread_mutex_t mutex;
+pthread_barrier_t barrier;
+int count = 0;
 
-void* f_oxigenio(void* v) {
-    mutex.wait();
-    oxygen += 1;
-    if (hydrogen >= 2) {
-        hydroQueue.signal(2);
-        hydrogen -= 2;
-        oxyQueue.signal();
-        oxygen -= 1;
-    } else {
-        mutex.signal();
-    }
-     
-    oxyQueue.wait();
-    bond();
-    barrier.wait();
-    mutex.signal();
+void bond() {
+   printf("molecula\n");
 }
 
-void* f_hidrogenio(void* v) {
-    mutex.wait();
-    hydrogen += 1;
-    if (hydrogen >= 2 && oxygen >= 1) {
-        hydroQueue.signal(2);
+void* f_oxygen(void* v) {
+    pthread_mutex_lock(&mutex);
+    oxygen += 1;
+    if (hydrogen >= 2) {
+        sem_post(&sem_hydro);
+        sem_post(&sem_hydro);
         hydrogen -= 2;
-        oxyQueue.signal();
+        sem_post(&sem_oxy);
         oxygen -= 1;
     } else {
-        mutex.signal();
+        pthread_mutex_unlock(&mutex);
+    }
+     
+    sem_wait(&sem_oxy);
+    bond();
+    pthread_barrier_wait(&barrier);
+    pthread_mutex_unlock(&mutex);
+}
+
+void* f_hydrogen(void* v) {
+    pthread_mutex_lock(&mutex);
+    hydrogen += 1;
+    if (hydrogen >= 2 && oxygen >= 1) {
+        sem_post(&sem_hydro);
+        sem_post(&sem_hydro);
+        hydrogen -= 2;
+        sem_post(&sem_oxy);
+        oxygen -= 1;
+    } else {
+        pthread_mutex_unlock(&mutex);
     }
     
-    hydroQueue.wait();
-    bond();
-    barrier.wait();
+    sem_wait(&sem_hydro);
+    pthread_barrier_wait(&barrier);
 }
 
 int main() {
     int i = 0;
-    int id[N_OXIGENIO];
+    int id_oxy[N_OXYGEN];
+    int id_hydro[N_HYDROGEN];
 
-    pthread_t thr_oxi[N_OXIGENIO], thr_hidro[N_HIDROGENIO];
+    pthread_t thr_oxy[N_OXYGEN], thr_hydro[N_HYDROGEN];
 
-    sem_init(&sem_hidro, 0, 0);
-    sem_init(&sem_oxi, 0, 0);
+    sem_init(&sem_hydro, 0, 0);
+    sem_init(&sem_oxy, 0, 0);
+    pthread_mutex_init(&mutex, NULL);
+    pthread_barrier_init(&barrier, 0, 3);
 
     for (i = 0; i < 30; i++) {
         if (i % 3 == 0) {
-            pthread_create(&thr_oxigenio[i], NULL, f_oxigenio, (void*) &idi[i]);
+            pthread_create(&thr_oxy[i], NULL, f_oxygen, (void*) &id_oxy[i]);
         } else {
-            pthread_create(&thr_hidrogenio[i], NULL, f_hidrogenio, (void*) &idi[i]);
+            pthread_create(&thr_hydro[i], NULL, f_hydrogen, (void*) &id_hydro[i]);
         }
     }
 
     for (i = 0; i < 30; i++) {
-        pthread_join(thr_oxigenio[i], NULL);
-        pthread_join(thr_hidrogenio[i], NULL);
+        pthread_join(thr_oxy[i], NULL);
+        pthread_join(thr_hydro[i], NULL);
     }
 
 }
