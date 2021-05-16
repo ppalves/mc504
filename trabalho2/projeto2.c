@@ -56,7 +56,7 @@ void* f_hydrogen(void* v) {
 }
 
 int main() {
-    int i = 0;
+    int i = 0,j=0;
     int id_oxy[N_OXYGEN];
     int id_hydro[N_HYDROGEN];
 
@@ -67,16 +67,17 @@ int main() {
     pthread_mutex_init(&mutex, NULL);
     pthread_barrier_init(&barrier, 0, 3);
 
-    for (i = 0; i < 30; i++) {
-        if (i % 3 == 0) {
-            pthread_create(&thr_oxy[i], NULL, f_oxygen, (void*) &id_oxy[i]);
-        } else {
-            pthread_create(&thr_hydro[i], NULL, f_hydrogen, (void*) &id_hydro[i]);
-        }
+    for (i = 0; i < N_OXYGEN; i++) {
+        pthread_create(&thr_oxy[i], NULL, f_oxygen, (void*) &id_oxy[i]);
     }
-
-    for (i = 0; i < 30; i++) {
+    for ( i = 0; i < N_HYDROGEN; i++) {
+        pthread_create(&thr_hydro[i], NULL, f_hydrogen, (void*) &id_hydro[i]);
+    }
+    
+    for (i = 0; i < N_OXYGEN; i++) {
         pthread_join(thr_oxy[i], NULL);
+    }
+    for ( i = 0; i < N_HYDROGEN; i++) {
         pthread_join(thr_hydro[i], NULL);
     }
 
