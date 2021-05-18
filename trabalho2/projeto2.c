@@ -2,10 +2,9 @@
 #include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <unistd.h>
 #define N_OXYGEN 10
 #define N_HYDROGEN 20
-
 int oxygen = 0;
 int hydrogen = 0;
 int h20 = 0;
@@ -18,6 +17,13 @@ pthread_barrier_t barrier;
 int count = 0;
 
 void print_becker() {
+    sleep(rand()%2 + 1) ;
+    pthread_mutex_lock(&print_mutex);
+    /*Clear console https://stackoverflow.com/questions/2347770/how-do-you-clear-the-console-screen-in-c */
+    printf("\e[1;1H\e[2J");
+    printf("0xygens in bequer: %d\n", oxygen);
+    printf("Hydrogens in bequer: %d\n", hydrogen);
+    printf("H20 molecules generated: %d\n\n", h20);
     for (int i = N_OXYGEN; i > 0; i--) {
         printf("|");
         if (i <= oxygen)
@@ -25,13 +31,22 @@ void print_becker() {
         else
             printf("    ");
         if (i <= hydrogen)
-            printf("   H");
+            printf("    H");
         else
-            printf("    ");
+            printf("     ");
         printf("|\n");
     }
-    printf("----  ----\n");
-    printf("h20: %d\n\n\n", h20);
+    printf("----   ----\n");
+    for (int i = 0; i < h20; i++)
+    {
+        printf("   ~~~~~\n");
+        printf("   ~H20~\n");
+        printf("   ~~~~~\n");
+
+    }
+    printf("\n\n");
+    
+    pthread_mutex_unlock(&print_mutex);
 }
 
 void bond() {
@@ -40,6 +55,7 @@ void bond() {
 }
 
 void* f_oxygen(void* v) {
+    sleep(rand()%2) ;
     pthread_mutex_lock(&mutex);
     oxygen += 1;
     print_becker();
@@ -49,20 +65,18 @@ void* f_oxygen(void* v) {
         hydrogen -= 2;
         sem_post(&sem_oxy);
         oxygen -= 1;
-        print_becker();
     } else {
         pthread_mutex_unlock(&mutex);
     }
      
     sem_wait(&sem_oxy);
-    pthread_mutex_lock(&print_mutex);
     bond();
-    pthread_mutex_unlock(&print_mutex);
     pthread_barrier_wait(&barrier);
     pthread_mutex_unlock(&mutex);
 }
 
 void* f_hydrogen(void* v) {
+    sleep(rand()% 2);
     pthread_mutex_lock(&mutex);
     hydrogen += 1;
     print_becker();
@@ -72,7 +86,6 @@ void* f_hydrogen(void* v) {
         hydrogen -= 2;
         sem_post(&sem_oxy);
         oxygen -= 1;
-        print_becker();
     } else {
         pthread_mutex_unlock(&mutex);
     }
