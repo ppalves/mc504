@@ -19,11 +19,15 @@ int count = 0;
 void print_becker() {
     sleep(rand()%2 + 1) ;
     pthread_mutex_lock(&print_mutex);
+
     /*Clear console https://stackoverflow.com/questions/2347770/how-do-you-clear-the-console-screen-in-c */
     printf("\e[1;1H\e[2J");
+    
     printf("0xygens in bequer: %d\n", oxygen);
     printf("Hydrogens in bequer: %d\n", hydrogen);
     printf("H20 molecules generated: %d\n\n", h20);
+
+    // imprime o becker
     for (int i = N_OXYGEN; i > 0; i--) {
         printf("|");
         if (i <= oxygen)
@@ -37,6 +41,8 @@ void print_becker() {
         printf("|\n");
     }
     printf("----   ----\n");
+
+    //imprime as aguas geradas
     for (int i = 0; i < h20; i++)
     {
         printf("   ~~~~~\n");
@@ -55,6 +61,8 @@ void bond() {
 }
 
 void* f_oxygen(void* v) {
+
+    //garante que a thread f_oxygen não entrará sempre antes de f_hydrogen na zona critica
     sleep(rand()%2) ;
     pthread_mutex_lock(&mutex);
     oxygen += 1;
