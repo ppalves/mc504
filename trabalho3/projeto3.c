@@ -15,6 +15,7 @@ sem_t sem_serfs;
 sem_t sem_hack;
 pthread_mutex_t mutex;
 pthread_mutex_t print_mutex;
+pthread_mutex_t board_mutex;
 pthread_barrier_t barrier;
 
 void print_boat() {
@@ -77,11 +78,13 @@ void print_boat() {
 void board(int type) {
     // type == 0 -> hacker
     // type == 1 -> serf
+    pthread_mutex_lock(&board_mutex);
     if (type == 0) {
         hackers_pass += 1;
     } else if (type == 1){
         serfs_pass += 1;
     }
+    pthread_mutex_unlock(&board_mutex);
     print_boat();
 }
 
@@ -178,6 +181,7 @@ int main() {
     sem_init(&sem_hack, 0, 0);
     pthread_mutex_init(&mutex, NULL);
     pthread_mutex_init(&print_mutex, NULL);
+    pthread_mutex_init(&board_mutex, NULL);
     pthread_barrier_init(&barrier, 0, 4);
 
     for (i = 0; i < N_HACKERS; i++) {
