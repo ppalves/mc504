@@ -7,6 +7,8 @@
 #define N_SERFS 10
 int hackers = 0;
 int serfs = 0;
+int hackers_pass = 0;
+int serfs_pass = 0;
 int boats = 0;
 
 sem_t sem_serfs;
@@ -15,7 +17,7 @@ pthread_mutex_t mutex;
 pthread_mutex_t print_mutex;
 pthread_barrier_t barrier;
 
-void board() {
+void print_boat() {
     sleep(rand()%2 + 1) ;
     pthread_mutex_lock(&print_mutex);
 
@@ -26,7 +28,6 @@ void board() {
     printf("serfs waiting: %d\n", serfs);
     printf("boats departure: %d\n\n", boats);
 
-    // imprime o becker
     for (int i = N_HACKERS; i > 0; i--) {
         printf("|");
         if (i <= hackers)
@@ -40,6 +41,20 @@ void board() {
         printf("|\n");
     }
     printf("----   ----\n");
+
+    printf("   ~~~~~~~\n");
+    printf("   ~-----~\n");
+    for (int k = 0; k < hackers_pass; k++){
+        printf("   ~| H |~\n");        
+    }
+    for (int k = 0; k < serfs_pass; k++){
+        printf("   ~| S |~\n");        
+    }
+    for (int k = 0; k < 4 - (hackers_pass + serfs_pass); k++){
+        printf("   ~|   |~\n");        
+    }
+    printf("   ~-----~\n");
+    printf("   ~~~~~~~\n");
 
     //imprime os barcos que partiram geradas
     for (int i = 0; i < boats; i++)
@@ -59,9 +74,22 @@ void board() {
     pthread_mutex_unlock(&print_mutex);
 }
 
+void board(int type) {
+    // type == 0 -> hacker
+    // type == 1 -> serf
+    if (type == 0) {
+        hackers_pass += 1;
+    } else if (type == 1){
+        serfs_pass += 1;
+    }
+    print_boat();
+}
+
 void row_boat() {
     boats++;
-    board();
+    hackers_pass = 0;
+    serfs_pass = 0;
+    print_boat();
 }
 
 void* f_hackers(void* v) {
@@ -69,7 +97,7 @@ void* f_hackers(void* v) {
     pthread_mutex_lock(&mutex);
     hackers += 1;
     int is_captain = 0;
-    board();
+    print_boat();
     if (hackers == 4) {
         sem_post(&sem_hack);
         sem_post(&sem_hack);
@@ -92,7 +120,7 @@ void* f_hackers(void* v) {
     }
      
     sem_wait(&sem_hack);
-    board();
+    board(0);
     pthread_barrier_wait(&barrier);
 
     if (is_captain == 1){
@@ -106,7 +134,7 @@ void* f_serfs(void* v) {
     pthread_mutex_lock(&mutex);
     serfs += 1;
     int is_captain = 0;
-    board();
+    print_boat();
 
     if (serfs == 4) {
         sem_post(&sem_serfs);
@@ -130,7 +158,7 @@ void* f_serfs(void* v) {
     }
     
     sem_wait(&sem_serfs);
-    board();
+    board(1);
     pthread_barrier_wait(&barrier);
 
     if (is_captain == 1){
