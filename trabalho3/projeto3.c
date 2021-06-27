@@ -29,7 +29,7 @@ void print_boat() {
     printf("serfs waiting: %d\n", serfs);
     printf("boats departure: %d\n\n", boats);
 
-    for (int i = N_HACKERS; i > 0; i--) {
+    for (int i = 5; i > 0; i--) {
         printf("|");
         if (i <= hackers)
             printf("H   ");
@@ -41,7 +41,7 @@ void print_boat() {
             printf("     ");
         printf("|\n");
     }
-    printf("----   ----\n");
+    printf("----     ----\n");
 
     printf("   ~~~~~~~\n");
     printf("   ~-----~\n");
