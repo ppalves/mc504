@@ -36,9 +36,9 @@ void print_boat() {
         else
             printf("    ");
         if (i <= serfs)
-            printf("    S");
+            printf("      S");
         else
-            printf("     ");
+            printf("       ");
         printf("|\n");
     }
     printf("----     ----\n");
